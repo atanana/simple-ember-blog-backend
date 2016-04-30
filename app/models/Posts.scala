@@ -35,13 +35,13 @@ class Posts @Inject()(dbConfigProvider: DatabaseConfigProvider) {
     dbConfig.db.run(posts += post)
   }
 
-  //  def delete(id: Long) = {
-  //    dbConfig.db.run(posts.filter(_.id == id).delete)
-  //  }
-  //
-  //  def find(id: Long) = {
-  //    dbConfig.db.run(posts.filter(_.id == id).result.headOption)
-  //  }
+  def delete(id: Long) = {
+    dbConfig.db.run(posts.filter(_.id === id).delete)
+  }
+
+  def find(id: Long) = {
+    dbConfig.db.run(posts.filter(_.id === id).result.headOption)
+  }
 
   def all(): Future[Seq[Post]] = {
     dbConfig.db.run(posts.result)

@@ -5,6 +5,7 @@ import models.{Post, Posts}
 import org.joda.time.DateTime
 import org.mockito.Matchers.{eq => mockEq}
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfter
 import org.scalatest.mock.MockitoSugar
 import org.scalatestplus.play._
 import play.api.libs.json._
@@ -15,13 +16,18 @@ import play.api.test._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class PostsControllerTest extends PlaySpec with Results with MockitoSugar {
+class PostsControllerTest extends PlaySpec with Results with MockitoSugar with BeforeAndAfter {
 
   val now: DateTime = DateTime.now()
+  var posts: Posts = _
+  var controller: PostsController = _
+
+  before {
+    posts = mock[Posts]
+    controller = new PostsController(posts)
+  }
 
   "Posts#list" should {
-    val posts: Posts = mock[Posts]
-    val controller = new PostsController(posts)
     "should be valid" in {
       when(posts.all()) thenReturn Future(Seq(
         Post(123, "test title", "test text", now),
@@ -47,8 +53,6 @@ class PostsControllerTest extends PlaySpec with Results with MockitoSugar {
 
   "Posts#add" should {
     "should create new post" in {
-      val posts: Posts = mock[Posts]
-      val controller = new PostsController(posts)
       val post: Post = Post(0, "test title", "test text", now)
       when(posts.add(mockEq(post))).thenReturn(Future(123))
       val request: FakeRequest[JsValue] = FakeRequest(POST, "/posts").withBody(Json.toJson(post))
@@ -56,13 +60,26 @@ class PostsControllerTest extends PlaySpec with Results with MockitoSugar {
       result mustBe JsObject(Seq("id" -> JsNumber(123)))
     }
 
-    "should return and error on incorrect json" in {
-      val controller = new PostsController(mock[Posts])
+    "should return an error on incorrect json" in {
       val json: JsObject = Json.toJson(Post(0, "test title", "test text", now)).as[JsObject] - "id"
       val request: FakeRequest[JsValue] = FakeRequest(POST, "/posts").withBody(json)
       val result: Future[Result] = controller.add().apply(request)
       status(result) mustBe BAD_REQUEST
       (contentAsJson(result) \ "error").toOption.isDefined mustBe true
+    }
+  }
+
+  "Posts#delete" should {
+    "should delete post" in {
+      when(posts.delete(123)).thenReturn(Future(1))
+      val result: Future[Result] = controller.delete(123).apply(FakeRequest())
+      status(result) mustBe OK
+    }
+
+    "should return an error on deleting post with wrong id" in {
+      when(posts.delete(123)).thenReturn(Future(0))
+      val result: Future[Result] = controller.delete(123).apply(FakeRequest())
+      status(result) mustBe BAD_REQUEST
     }
   }
 }

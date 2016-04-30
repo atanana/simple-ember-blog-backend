@@ -20,4 +20,8 @@ class PostsController @Inject()(posts: Posts) extends Controller {
       post => posts.add(post).map(id => Created(Json.obj("id" -> id)))
     )
   }
+
+  def delete(id: Long) = Action.async {
+    posts.delete(id).map(result => if (result > 0) Ok("ok") else BadRequest("not ok"))
+  }
 }
