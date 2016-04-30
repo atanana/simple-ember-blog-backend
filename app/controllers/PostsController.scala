@@ -1,23 +1,23 @@
 package controllers
 
 import com.google.inject.Inject
+import models.Posts.postsFormat
 import models.{Post, Posts}
-import org.joda.time.DateTime
-import play.api.libs.json.{Json, Writes}
-import play.api.mvc.{Action, Controller}
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
+import play.api.libs.json.{Json, _}
+import play.api.mvc.{Action, BodyParsers, Controller}
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class PostsController @Inject()(posts: Posts) extends Controller {
-  implicit val postsWrites: Writes[Post] = (
-    (JsPath \ "id").write[Long] and
-      (JsPath \ "title").write[String] and
-      (JsPath \ "text").write[String] and
-      (JsPath \ "created").write[DateTime]
-    ) (unlift(Post.unapply))
-
   def list() = Action.async {
     posts.all().map(result => Ok(Json.toJson(result)))
+  }
+
+  def add() = Action.async(BodyParsers.parse.json) { request =>
+    request.body.validate[Post].fold(
+      errors => Future(BadRequest(Json.obj("error" -> JsError.toJson(errors)))),
+      post => posts.add(post).map(id => Created(Json.obj("id" -> id)))
+    )
   }
 }

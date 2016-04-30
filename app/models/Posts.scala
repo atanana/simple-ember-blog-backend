@@ -6,6 +6,9 @@ import play.api.db.slick.DatabaseConfigProvider
 import slick.driver.JdbcProfile
 import slick.driver.MySQLDriver.api._
 import com.github.tototoshi.slick.MySQLJodaSupport._
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{Format, JsPath}
 import slick.lifted.ProvenShape
 
 import scala.concurrent.Future
@@ -28,10 +31,10 @@ class Posts @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   private val posts = TableQuery[PostsTableDef]
 
-//  def add(post: Post): Future[Int] = {
-//    dbConfig.db.run(posts += post)
-//  }
-//
+  def add(post: Post): Future[Int] = {
+    dbConfig.db.run(posts += post)
+  }
+
   //  def delete(id: Long) = {
   //    dbConfig.db.run(posts.filter(_.id == id).delete)
   //  }
@@ -43,4 +46,13 @@ class Posts @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   def all(): Future[Seq[Post]] = {
     dbConfig.db.run(posts.result)
   }
+}
+
+object Posts {
+  implicit val postsFormat: Format[Post] = (
+    (JsPath \ "id").format[Long] and
+      (JsPath \ "title").format[String] and
+      (JsPath \ "text").format[String] and
+      (JsPath \ "created").format[DateTime]
+    ) (Post.apply, unlift(Post.unapply))
 }
