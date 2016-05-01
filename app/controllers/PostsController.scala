@@ -1,8 +1,8 @@
 package controllers
 
 import com.google.inject.Inject
-import models.Posts.postsFormat
-import models.{Post, Posts}
+import models.Posts.{postsFormat, postPayloadsFormat}
+import models.{Post, PostPayload, Posts}
 import play.api.libs.json.{Json, _}
 import play.api.mvc.{Action, BodyParsers, Controller}
 
@@ -15,9 +15,9 @@ class PostsController @Inject()(posts: Posts) extends Controller {
   }
 
   def add() = Action.async(BodyParsers.parse.json) { request =>
-    request.body.validate[Post].fold(
+    request.body.validate[PostPayload].fold(
       errors => Future(BadRequest(Json.obj("error" -> JsError.toJson(errors)))),
-      post => posts.add(post).map(id => Created(Json.obj("id" -> id)))
+      payload => posts.add(payload).map(id => Created(Json.obj("id" -> id)))
     )
   }
 
@@ -26,9 +26,9 @@ class PostsController @Inject()(posts: Posts) extends Controller {
   }
 
   def update(id: Long) = Action.async(BodyParsers.parse.json) { request =>
-    request.body.validate[Post].fold(
+    request.body.validate[PostPayload].fold(
       errors => Future(BadRequest(Json.obj("error" -> JsError.toJson(errors)))),
-      post => posts.update(post.copy(id = id)).map(result => if (result > 0) Ok("ok") else BadRequest("not ok"))
+      payload => posts.update(new Post(id, payload)).map(result => if (result > 0) Ok("ok") else BadRequest("not ok"))
     )
   }
 }

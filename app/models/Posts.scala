@@ -13,7 +13,11 @@ import slick.lifted.ProvenShape
 
 import scala.concurrent.Future
 
-case class Post(id: Long, title: String, text: String, created: DateTime)
+case class PostPayload(title: String, text: String, created: DateTime)
+
+case class Post(id: Long, title: String, text: String, created: DateTime) {
+  def this(id:Long, payload:PostPayload) = this(id, payload.title, payload.text, payload.created)
+}
 
 class PostsTableDef(tag: Tag) extends Table[Post](tag, "post") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
@@ -31,8 +35,8 @@ class Posts @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   private val posts = TableQuery[PostsTableDef]
 
-  def add(post: Post): Future[Int] = {
-    dbConfig.db.run(posts += post)
+  def add(payload: PostPayload): Future[Int] = {
+    dbConfig.db.run(posts += new Post(0, payload))
   }
 
   def delete(id: Long) = {
@@ -59,4 +63,10 @@ object Posts {
       (JsPath \ "text").format[String] and
       (JsPath \ "created").format[DateTime]
     ) (Post.apply, unlift(Post.unapply))
+
+  implicit val postPayloadsFormat: Format[PostPayload] = (
+    (JsPath \ "title").format[String] and
+      (JsPath \ "text").format[String] and
+      (JsPath \ "created").format[DateTime]
+    ) (PostPayload.apply, unlift(PostPayload.unapply))
 }

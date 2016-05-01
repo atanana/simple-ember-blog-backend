@@ -1,7 +1,7 @@
 package controllers
 
-import models.Posts.postsFormat
-import models.{Post, Posts}
+import models.Posts.postPayloadsFormat
+import models.{Post, PostPayload, Posts}
 import org.joda.time.DateTime
 import org.mockito.Matchers.{eq => mockEq}
 import org.mockito.Mockito._
@@ -53,15 +53,15 @@ class PostsControllerTest extends PlaySpec with Results with MockitoSugar with B
 
   "Posts#add" should {
     "should create new post" in {
-      val post: Post = Post(0, "test title", "test text", now)
-      when(posts.add(mockEq(post))).thenReturn(Future(123))
-      val request: FakeRequest[JsValue] = FakeRequest(POST, "/posts").withBody(Json.toJson(post))
+      val payload: PostPayload = PostPayload("test title", "test text", now)
+      when(posts.add(mockEq(payload))).thenReturn(Future(123))
+      val request: FakeRequest[JsValue] = FakeRequest(POST, "/posts").withBody(Json.toJson(payload))
       val result: JsValue = contentAsJson(controller.add().apply(request))
       result mustBe JsObject(Seq("id" -> JsNumber(123)))
     }
 
     "should return an error on incorrect json" in {
-      val json: JsObject = Json.toJson(Post(0, "test title", "test text", now)).as[JsObject] - "id"
+      val json: JsObject = Json.toJson(PostPayload("test title", "test text", now)).as[JsObject] - "title"
       val request: FakeRequest[JsValue] = FakeRequest(POST, "/posts").withBody(json)
       val result: Future[Result] = controller.add().apply(request)
       status(result) mustBe BAD_REQUEST
@@ -85,23 +85,23 @@ class PostsControllerTest extends PlaySpec with Results with MockitoSugar with B
 
   "Posts#update" should {
     "should update post" in {
-      val post: Post = Post(0, "test title", "test text", now)
-      when(posts.update(post.copy(id = 123))).thenReturn(Future(1))
-      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(post))
+      val payload: PostPayload = PostPayload("test title", "test text", now)
+      when(posts.update(new Post(123, payload))).thenReturn(Future(1))
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(payload))
       status(controller.update(123).apply(request)) mustBe OK
     }
 
     "should return an error on updating post with wrong id" in {
-      val post: Post = Post(0, "test title", "test text", now)
-      when(posts.update(post.copy(id = 123))).thenReturn(Future(0))
-      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(post))
+      val payload: PostPayload = PostPayload("test title", "test text", now)
+      when(posts.update(new Post(123, payload))).thenReturn(Future(0))
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(payload))
       status(controller.update(123).apply(request)) mustBe BAD_REQUEST
     }
 
     "should return an error on updating post with incorrect json" in {
-      val post: Post = Post(0, "test title", "test text", now)
-      when(posts.update(post.copy(id = 123))).thenReturn(Future(1))
-      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(post).as[JsObject] - "id")
+      val payload: PostPayload = PostPayload("test title", "test text", now)
+      when(posts.update(new Post(123, payload))).thenReturn(Future(1))
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(payload).as[JsObject] - "title")
       status(controller.update(123).apply(request)) mustBe BAD_REQUEST
     }
   }
