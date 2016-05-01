@@ -24,4 +24,11 @@ class PostsController @Inject()(posts: Posts) extends Controller {
   def delete(id: Long) = Action.async {
     posts.delete(id).map(result => if (result > 0) Ok("ok") else BadRequest("not ok"))
   }
+
+  def update(id: Long) = Action.async(BodyParsers.parse.json) { request =>
+    request.body.validate[Post].fold(
+      errors => Future(BadRequest(Json.obj("error" -> JsError.toJson(errors)))),
+      post => posts.update(post.copy(id = id)).map(result => if (result > 0) Ok("ok") else BadRequest("not ok"))
+    )
+  }
 }

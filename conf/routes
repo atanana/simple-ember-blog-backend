@@ -6,6 +6,7 @@
 GET           /posts                 controllers.PostsController.list()
 POST          /posts                 controllers.PostsController.add()
 DELETE        /posts/:post_id        controllers.PostsController.delete(post_id: Long)
+PUT           /posts/:post_id        controllers.PostsController.update(post_id: Long)
 
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file          controllers.Assets.at(path="/public", file)

@@ -46,6 +46,10 @@ class Posts @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   def all(): Future[Seq[Post]] = {
     dbConfig.db.run(posts.result)
   }
+
+  def update(post: Post) = {
+    dbConfig.db.run(posts.filter(_.id === post.id).update(post))
+  }
 }
 
 object Posts {

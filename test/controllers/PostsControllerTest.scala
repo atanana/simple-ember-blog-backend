@@ -82,4 +82,27 @@ class PostsControllerTest extends PlaySpec with Results with MockitoSugar with B
       status(result) mustBe BAD_REQUEST
     }
   }
+
+  "Posts#update" should {
+    "should update post" in {
+      val post: Post = Post(0, "test title", "test text", now)
+      when(posts.update(post.copy(id = 123))).thenReturn(Future(1))
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(post))
+      status(controller.update(123).apply(request)) mustBe OK
+    }
+
+    "should return an error on updating post with wrong id" in {
+      val post: Post = Post(0, "test title", "test text", now)
+      when(posts.update(post.copy(id = 123))).thenReturn(Future(0))
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(post))
+      status(controller.update(123).apply(request)) mustBe BAD_REQUEST
+    }
+
+    "should return an error on updating post with incorrect json" in {
+      val post: Post = Post(0, "test title", "test text", now)
+      when(posts.update(post.copy(id = 123))).thenReturn(Future(1))
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(post).as[JsObject] - "id")
+      status(controller.update(123).apply(request)) mustBe BAD_REQUEST
+    }
+  }
 }
