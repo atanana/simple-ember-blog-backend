@@ -10,13 +10,15 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{Format, JsPath}
 import slick.lifted.ProvenShape
+import utils.JsonDate
+import utils.JsonDate.jodaDateFormat
 
 import scala.concurrent.Future
 
 case class PostPayload(title: String, text: String, created: DateTime)
 
 case class Post(id: Long, title: String, text: String, created: DateTime) {
-  def this(id:Long, payload:PostPayload) = this(id, payload.title, payload.text, payload.created)
+  def this(id: Long, payload: PostPayload) = this(id, payload.title, payload.text, payload.created)
 }
 
 class PostsTableDef(tag: Tag) extends Table[Post](tag, "post") {
@@ -35,8 +37,8 @@ class Posts @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   private val posts = TableQuery[PostsTableDef]
 
-  def add(payload: PostPayload): Future[Int] = {
-    dbConfig.db.run(posts += new Post(0, payload))
+  def add(payload: PostPayload) = {
+    dbConfig.db.run((posts returning posts.map(_.id)) += new Post(0, payload))
   }
 
   def delete(id: Long) = {
@@ -61,12 +63,12 @@ object Posts {
     (JsPath \ "id").format[Long] and
       (JsPath \ "title").format[String] and
       (JsPath \ "text").format[String] and
-      (JsPath \ "created").format[DateTime]
+      (JsPath \ "created").format[DateTime](jodaDateFormat)
     ) (Post.apply, unlift(Post.unapply))
 
   implicit val postPayloadsFormat: Format[PostPayload] = (
     (JsPath \ "title").format[String] and
       (JsPath \ "text").format[String] and
-      (JsPath \ "created").format[DateTime]
+      (JsPath \ "created").format[DateTime](jodaDateFormat)
     ) (PostPayload.apply, unlift(PostPayload.unapply))
 }
