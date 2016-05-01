@@ -14,6 +14,10 @@ class PostsController @Inject()(posts: Posts) extends Controller {
     posts.all().map(result => Ok(Json.toJson(result)))
   }
 
+  def show(id: Long) = Action.async {
+    posts.find(id).map(result => result.map(post => Ok(Json.toJson(result))).getOrElse(NotFound("no post")))
+  }
+
   def add() = Action.async(BodyParsers.parse.json) { request =>
     request.body.validate[PostPayload].fold(
       errors => Future(BadRequest(Json.obj("error" -> JsError.toJson(errors)))),

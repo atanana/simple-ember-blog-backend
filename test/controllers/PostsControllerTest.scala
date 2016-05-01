@@ -33,7 +33,9 @@ class PostsControllerTest extends PlaySpec with Results with MockitoSugar with B
         Post(123, "test title", "test text", now),
         Post(432, "test title 2", "test text 2", now)
       ))
-      val postsJson: JsValue = contentAsJson(controller.list().apply(FakeRequest()))
+      val result: Future[Result] = controller.list().apply(FakeRequest())
+      status(result) mustBe OK
+      val postsJson: JsValue = contentAsJson(result)
       postsJson mustBe JsArray(Seq(
         JsObject(Seq(
           "id" -> JsNumber(123),
@@ -51,13 +53,29 @@ class PostsControllerTest extends PlaySpec with Results with MockitoSugar with B
     }
   }
 
+  "Posts#show" should {
+    "should show post" in {
+      when(posts.find(123)).thenReturn(Future(Some(Post(123, "test title", "test text", now))))
+      val result: Future[Result] = controller.show(123).apply(FakeRequest())
+      status(result) mustBe OK
+      contentAsJson(result) mustBe JsObject(Seq(
+        "id" -> JsNumber(123),
+        "title" -> JsString("test title"),
+        "text" -> JsString("test text"),
+        "created" -> JsNumber(now.getMillis)
+      ))
+    }
+  }
+
   "Posts#add" should {
     "should create new post" in {
       val payload: PostPayload = PostPayload("test title", "test text", now)
       when(posts.add(mockEq(payload))).thenReturn(Future(123))
       val request: FakeRequest[JsValue] = FakeRequest(POST, "/posts").withBody(Json.toJson(payload))
-      val result: JsValue = contentAsJson(controller.add().apply(request))
-      result mustBe JsObject(Seq("id" -> JsNumber(123)))
+      val result: Future[Result] = controller.add().apply(request)
+      status(result) mustBe CREATED
+      val resultJson: JsValue = contentAsJson(result)
+      resultJson mustBe JsObject(Seq("id" -> JsNumber(123)))
     }
 
     "should return an error on incorrect json" in {

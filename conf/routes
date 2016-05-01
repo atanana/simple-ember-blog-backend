@@ -4,6 +4,7 @@
 
 # posts
 GET           /posts                 controllers.PostsController.list()
+GET           /posts/:post_id        controllers.PostsController.show(post_id: Long)
 POST          /posts                 controllers.PostsController.add()
 DELETE        /posts/:post_id        controllers.PostsController.delete(post_id: Long)
 PUT           /posts/:post_id        controllers.PostsController.update(post_id: Long)
