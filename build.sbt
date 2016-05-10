@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(cache, ws, specs2 % Test,
   "com.typesafe.play" %% "play-slick-evolutions" % "2.0.0",
   "mysql" % "mysql-connector-java" % "5.1.38",
   "com.github.tototoshi" % "slick-joda-mapper_2.11" % "2.2.0",
-  "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test"
+  "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test",
+  "be.objectify" %% "deadbolt-scala" % "2.5.0"
 )
 
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )  

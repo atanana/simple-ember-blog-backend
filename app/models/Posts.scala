@@ -1,16 +1,15 @@
 package models
 
+import com.github.tototoshi.slick.MySQLJodaSupport._
 import com.google.inject.Inject
 import org.joda.time.DateTime
 import play.api.db.slick.DatabaseConfigProvider
-import slick.driver.JdbcProfile
-import slick.driver.MySQLDriver.api._
-import com.github.tototoshi.slick.MySQLJodaSupport._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.{Format, JsPath}
+import slick.driver.JdbcProfile
+import slick.driver.MySQLDriver.api._
 import slick.lifted.ProvenShape
-import utils.JsonDate
 import utils.JsonDate.jodaDateFormat
 
 import scala.concurrent.Future
