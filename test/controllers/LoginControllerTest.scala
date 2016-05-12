@@ -8,6 +8,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import utils.SessionValues
 
+import scala.concurrent.Future
+
 class LoginControllerTest extends PlaySpec with Results with BeforeAndAfter with OneAppPerSuite {
   var controller: LoginController = _
 
@@ -17,9 +19,24 @@ class LoginControllerTest extends PlaySpec with Results with BeforeAndAfter with
 
   "Login#login" should {
     "should write valid login data" in {
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj("login" -> "admin", "password" -> "admin"))
+      val resultFuture: Future[Result] = controller.login().apply(request)
+      status(resultFuture) mustBe OK
+      await(resultFuture).session(request).get(SessionValues.USER_ID) mustBe Some("123")
+    }
+
+    "should return an error on incorrect json" in {
       val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj())
-      val result: Result = await(controller.login().apply(request))
-      result.session(request).get(SessionValues.USER_ID) mustBe Some("123")
+      val resultFuture: Future[Result] = controller.login().apply(request)
+      status(resultFuture) mustBe BAD_REQUEST
+      await(resultFuture).session(request).get(SessionValues.USER_ID) mustBe None
+    }
+
+    "should return an error on incorrect credentials" in {
+      val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj("login" -> "not admin", "password" -> "not admin"))
+      val resultFuture: Future[Result] = controller.login().apply(request)
+      status(resultFuture) mustBe UNAUTHORIZED
+      await(resultFuture).session(request).get(SessionValues.USER_ID) mustBe None
     }
   }
 }
