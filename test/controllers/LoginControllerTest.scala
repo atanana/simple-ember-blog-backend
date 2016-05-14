@@ -22,6 +22,7 @@ class LoginControllerTest extends PlaySpec with Results with BeforeAndAfter with
       val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj("login" -> "admin", "password" -> "admin"))
       val resultFuture: Future[Result] = controller.login().apply(request)
       status(resultFuture) mustBe OK
+      contentAsJson(resultFuture) mustBe Json.obj("success" -> true)
       await(resultFuture).session(request).get(SessionValues.USER_ID) mustBe Some("123")
     }
 
@@ -35,7 +36,8 @@ class LoginControllerTest extends PlaySpec with Results with BeforeAndAfter with
     "should return an error on incorrect credentials" in {
       val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.obj("login" -> "not admin", "password" -> "not admin"))
       val resultFuture: Future[Result] = controller.login().apply(request)
-      status(resultFuture) mustBe UNAUTHORIZED
+      status(resultFuture) mustBe OK
+      contentAsJson(resultFuture) mustBe Json.obj("success" -> false)
       await(resultFuture).session(request).get(SessionValues.USER_ID) mustBe None
     }
   }

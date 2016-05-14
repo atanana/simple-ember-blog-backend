@@ -17,12 +17,14 @@ class LoginController extends Controller {
       (JsPath \ "password").read[String]
     ) (LoginForm.apply _)
 
+  def loginResult(success: Boolean) = Ok(Json.obj("success" -> success))
+
   def login() = Action.async(BodyParsers.parse.json) { request =>
     request.body.validate[LoginForm].fold(
       errors => Future(BadRequest(Json.obj("error" -> JsError.toJson(errors)))),
       login => Future(login match {
-        case LoginForm("admin", "admin") => Ok.withSession(SessionValues.USER_ID -> "123")
-        case _ => Unauthorized
+        case LoginForm("admin", "admin") => loginResult(true).withSession(SessionValues.USER_ID -> "123")
+        case _ => loginResult(false)
       })
     )
   }
